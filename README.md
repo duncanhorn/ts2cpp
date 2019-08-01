@@ -13,7 +13,7 @@ export module Foo {
     }
 }
 ```
-This will generate the following C++:
+This will generate the following type definition in C++:
 ```c++
 namespace Foo
 {
@@ -41,8 +41,32 @@ struct LoginInfo
 };
 ```
 
+### Unnamed Structure Example
+If the type of a member is an object declared inline (i.e. using the `foo: { ... }` syntax), then the generated structure name will attempt to combine the member and interface name. For example:
+```ts
+export interface Computer {
+    screen: {
+        width: number;
+        height: number;
+    }
+}
+```
+Will become:
+```c++
+struct ComputerScreen
+{
+    json::number_t width;
+    json::number_t height;
+};
+
+struct Computer
+{
+    ComputerScreen screen;
+};
+```
+
 ### Enumeration Example
-Enumerations are extracted out and attempt to combine the member and interface name to construct a name to use for the enumeration. For example, take the following:
+Enumerations are extracted out and named in an identical manner to unnamed structures. For example, take the following:
 ```ts
 export interface Car {
     make: 'Ford' | 'Honda' | 'Nissan';
