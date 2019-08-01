@@ -36,6 +36,25 @@ namespace ast
         node* type;
     };
 
+    struct object : node
+    {
+        std::vector<member*> named_members;
+        // TODO: unnamed members (i.e. arbitrary key:value pairs)
+    };
+
+    struct interface : node
+    {
+        bool is_export = false;
+        node* base = nullptr;
+        std::string name;
+        object* definition = nullptr;
+    };
+
+    struct interface_reference : node
+    {
+        std::string name;
+    };
+
     enum class fundamental_type
     {
         any,
@@ -50,22 +69,13 @@ namespace ast
         fundamental_type_reference(fundamental_type type) : type(type) {}
     };
 
-    struct interface_reference : node
+    struct array : node
     {
-        std::string name;
+        node* type;
     };
 
-    struct object : node
+    struct enumeration : node
     {
-        std::vector<member*> named_members;
-        // TODO: unnamed members (i.e. arbitrary key:value pairs)
-    };
-
-    struct interface : node
-    {
-        bool is_export = false;
-        node* base = nullptr;
-        std::string name;
-        object* definition = nullptr;
+        std::vector<std::string> values;
     };
 }

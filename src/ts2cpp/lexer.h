@@ -13,12 +13,12 @@ enum class token
     // Characters
     open_curly, // {
     close_curly, // }
-    // open_bracket, // [
-    // close_bracket, // ]
+    open_bracket, // [
+    close_bracket, // ]
     semicolon, // ;
     colon, // :
     question, // ?
-    // pipe, // |
+    pipe, // |
 
     // Keywords
     keyword_export,

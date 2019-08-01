@@ -80,6 +80,21 @@ void lexer::advance()
             current_token = token::question;
             break;
 
+        case '|':
+            string_value = "|";
+            current_token = token::pipe;
+            break;
+
+        case '[':
+            string_value = "[";
+            current_token = token::open_bracket;
+            break;
+
+        case ']':
+            string_value = "]";
+            current_token = token::close_bracket;
+            break;
+
         case '/':
             if (input.peek() == '/')
             {

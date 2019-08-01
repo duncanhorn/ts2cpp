@@ -68,21 +68,25 @@ static ast::node* parse_type_reference(lexer& lex)
     case token::type_string:
         result = new ast::fundamental_type_reference(ast::fundamental_type::string);
         lex.file->nodes.emplace_back(result);
+        lex.advance();
         break;
 
     case token::type_boolean:
         result = new ast::fundamental_type_reference(ast::fundamental_type::boolean);
         lex.file->nodes.emplace_back(result);
+        lex.advance();
         break;
 
     case token::type_number:
         result = new ast::fundamental_type_reference(ast::fundamental_type::number);
         lex.file->nodes.emplace_back(result);
+        lex.advance();
         break;
 
     case token::type_any:
         result = new ast::fundamental_type_reference(ast::fundamental_type::any);
         lex.file->nodes.emplace_back(result);
+        lex.advance();
         break;
 
     case token::open_curly:
@@ -95,13 +99,32 @@ static ast::node* parse_type_reference(lexer& lex)
         ref->name.swap(lex.string_value);
         result = ref.get();
         lex.file->nodes.push_back(std::move(ref));
+        lex.advance();
+    }   break;
+
+    case token::string:
+    {
+        auto defn = std::make_unique<ast::enumeration>();
+        while (true)
+        {
+            defn->values.push_back(std::move(lex.string_value));
+            lex.advance();
+
+            if (lex.current_token != token::pipe)
+            {
+                break;
+            }
+            lex.advance();
+        }
+
+        result = defn.get();
+        lex.file->nodes.push_back(std::move(defn));
     }   break;
 
     default:
         std::printf("ERROR: Unexpected identifier '%s'; expected a type or identifier\n", lex.string_value.c_str());
         return nullptr;
     }
-    lex.advance();
 
     return result;
 }
@@ -116,6 +139,7 @@ static ast::object* parse_object(lexer& lex)
     {
         switch (lex.current_token)
         {
+        case token::keyword_module: // Allowed as an identifier in certain contexts
         case token::identifier:
         {
             auto member = std::make_unique<ast::member>();
@@ -135,13 +159,29 @@ static ast::object* parse_object(lexer& lex)
             }
             lex.advance();
 
-            member->type = parse_type_reference(lex);
-            if (!member->type)
+            ast::node* type = parse_type_reference(lex);
+            if (!type)
             {
                 std::printf("NOTE: While processing object member '%s'\n", member->name.c_str());
                 return nullptr;
             }
-            member->type->parent = member.get();
+
+            if (lex.current_token == token::open_bracket)
+            {
+                auto arr = std::make_unique<ast::array>();
+                arr->type = type;
+                type->parent = arr.get();
+                type = arr.get();
+                lex.file->nodes.push_back(std::move(arr));
+
+                lex.advance();
+                if (lex.current_token != token::close_bracket)
+                {
+                    std::printf("ERROR: Unexpected token '%s' while parsing object member '%s'; expected ']'\n", lex.string_value.c_str(), member->name.c_str());
+                    return nullptr;
+                }
+                lex.advance();
+            }
 
             if (lex.current_token != token::semicolon)
             {
